@@ -134,7 +134,9 @@ Expected output:
 
 Passed! - Failed: 0, Passed: X, Total: X
 
-🏗️ Project Structure
+### 🧱 Project Structure
+
+```
 src/
  ├── Betsson.OnlineWallets        # Service layer
  ├── Betsson.OnlineWallets.Data   # Repository / database logic
@@ -143,30 +145,29 @@ src/
 tests/
  ├── Betsson.OnlineWallets.UnitTests   # Unit tests (service logic)
  └── Betsson.OnlineWallets.ApiTests    # End-to-end API tests
+```
 
-📌 Commit Strategy (Conventional Commits)
+### 📌 Commit Strategy (Conventional Commits)
 
 Commits follow a clean, progressive structure such as:
 
+```
 test: add unit tests for GetBalanceAsync
-
 test: add deposit and withdraw service tests
-
 test(api): add API test project
-
 test(api): implement balance, deposit and withdraw API tests
-
 test(api): fix JSON deserialization and align tests with controller behavior
+```
 
 This ensures a clear timeline and professional reviewability.
 
-🎯 Final Result
+### 🎯 Final Result
 
 This solution demonstrates:
 
-✔️ Deep understanding of service behavior
-✔️ Strong separation between unit tests and end-to-end tests
-✔️ Handling of error scenarios and edge cases
-✔️ Full reproducibility via Docker
-✔️ Modern, industry-grade test tools and practices
-✔️ Clean commit history and fully automated validation
+- ✔️ Deep understanding of service behavior  
+- ✔️ Strong separation between unit tests and end-to-end tests  
+- ✔️ Proper handling of error scenarios and edge cases  
+- ✔️ Full reproducibility via Docker  
+- ✔️ Use of modern testing tools and practices  
+- ✔️ Clean commit history with automated validation  
