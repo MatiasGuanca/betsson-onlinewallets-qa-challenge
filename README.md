@@ -1,155 +1,151 @@
-🧾 Online Wallets – QA Backend Engineer Challenge
+# Online Wallets – QA Backend Engineer Challenge
 
-This repository contains the full solution for the QA Backend Engineer Technical Challenge, including:
+This repository contains the complete solution for the **QA Backend Engineer Technical Challenge**, including:
 
-Unit tests for core business logic
+- Unit tests for service-level business logic  
+- End-to-end API tests validating the public REST contract  
+- Docker execution pipeline  
+- A structured and professional commit history  
+- A clear testing strategy applied across different layers of the system  
 
-API (end-to-end) tests validating the public service contract
+---
 
-Docker-based execution environment
+## Overview
 
-Complete testing strategy and structured commit history
+The Online Wallets API exposes three main operations:
 
-🚀 Project Overview
+| Method | Endpoint                     | Description                         |
+|--------|------------------------------|-------------------------------------|
+| GET    | /onlinewallet/balance        | Retrieves the current wallet balance |
+| POST   | /onlinewallet/deposit        | Deposits a specified amount          |
+| POST   | /onlinewallet/withdraw       | Withdraws money with balance checks  |
 
-The Online Wallets service exposes three main wallet operations:
+Both **internal logic** and **public API behavior** were validated independently.
 
-Method	Endpoint	Description
-GET	/onlinewallet/balance	Retrieves the current wallet balance
-POST	/onlinewallet/deposit	Deposits a specified amount
-POST	/onlinewallet/withdraw	Withdraws funds (validating balance)
+---
 
-Both service-level logic and the API behavior were tested to ensure correctness, stability, and predictable outcomes.
+## 🧪 Testing Strategy
 
-🧪 Testing Strategy
+Testing was performed at two levels:
 
-The testing approach covers two independent layers:
+---
 
-1️⃣ Unit Tests — OnlineWalletService
+### 1. Unit Tests — Service Layer (`OnlineWalletService`)
 
-Frameworks used:
+Frameworks used: **xUnit**, **Moq**, **FluentAssertions**
 
-xUnit
+Coverage includes:
 
-FluentAssertions
+#### `GetBalanceAsync`
+- Returns **0** when no previous entries exist  
+- Computes balance correctly when a previous entry is present  
 
-Moq
+#### `DepositFundsAsync`
+- Rejects invalid deposit amounts  
+- Inserts a correct repository entry  
+- Returns updated balance  
 
-🔍 What is tested
-✔️ GetBalanceAsync
+#### `WithdrawFundsAsync`
+- Throws `InsufficientBalanceException` when funds are insufficient  
+- Inserts a correct withdrawal entry (negative amount)  
+- Returns updated balance  
 
-Returns 0 when no previous transactions exist
+Mocking is used to isolate the service from the data layer.
 
-Returns computed balance when a last entry is present
+---
 
-✔️ DepositFundsAsync
+### 2. End-to-End API Tests — REST Contract Validation
 
-Throws exception for invalid amounts
+Frameworks used: **RestSharp**, **FluentAssertions**, `System.Text.Json`  
 
-Inserts the correct repository entry
+These tests interact with the real API (running via Docker), verifying:
 
-Returns the updated balance based on previous state
+#### `GET /onlinewallet/balance`
+- Returns **200 OK**  
+- Response includes a valid JSON balance object  
 
-✔️ WithdrawFundsAsync
+#### `POST /onlinewallet/deposit`
+- Returns **200 OK**  
+- Response includes the **new balance**  
+- Balance logic validated using: initialBalance + depositAmount  
 
-Throws InsufficientBalanceException on insufficient funds
+#### `POST /onlinewallet/withdraw` (valid)
+- Returns **200 OK**  
+- Updated balance returned  
 
-Inserts a negative entry for withdrawals
+#### `POST /onlinewallet/withdraw` (insufficient funds)
+- Returns **400 BadRequest**  
+- Error is correctly mapped through `SystemController.Error`  
 
-Returns the correct updated balance
+---
 
-Mocking (Moq) is used to simulate repository interactions without storing real data.
+## JSON Deserialization Notes
 
-2️⃣ API Tests — End-to-End
+ASP.NET Core serializes properties in **camelCase**.  
+Tests explicitly use:
 
-Frameworks used:
+```csharp
+new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+```
 
-RestSharp
+Ensuring correct mapping between:
 
-FluentAssertions
+- `Amount` (C#)  
+- `"amount"` (JSON)  
 
-System.Text.Json with case-insensitive options
+---
 
-These tests validate the real behavior of the running REST API (via Docker), simulating an external consumer.
-
-🔍 What is tested
-✔️ GET /onlinewallet/balance
-
-Response status = 200 OK
-
-JSON body correctly deserialized ({ "amount": decimal })
-
-✔️ POST /onlinewallet/deposit
-
-Returns 200 OK
-
-Response body contains the updated balance
-
-Verified using: initialBalance + depositAmount
-
-✔️ POST /onlinewallet/withdraw (valid scenario)
-
-Returns 200 OK
-
-Response body contains updated balance
-
-✔️ POST /onlinewallet/withdraw (insufficient funds)
-
-Returns 400 BadRequest
-
-Error is generated by internal exception mapping (SystemController.Error)
-
-All tests interact with the real API, not mocks.
-
-🧱 JSON Handling
-
-ASP.NET Core serializes JSON in camelCase.
-To ensure correct deserialization, tests use:
-
-new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
-
-
-This ensures Amount maps correctly to "amount" in API responses.
-
-🐳 Running the Project with Docker
-1. Build the Docker image
-docker build -f src/Betsson.OnlineWallets.Web/Dockerfile .
-
-2. Run the container
-docker run -p 8080:8080 <image-id>
-
-
-The Swagger UI will be available at:
-
-http://localhost:8080/swagger/index.html
-
-🧪 Running All Tests
-
-From the solution root folder:
-
-dotnet test
-
-
-Expected output:
-
-Passed! - Failed: 0, Passed: X, Total: X
-
-### 🧱 Project Structure
+## 🧱 Project Structure
 
 ```
 src/
  ├── Betsson.OnlineWallets        # Service layer
- ├── Betsson.OnlineWallets.Data   # Repository / database logic
+ ├── Betsson.OnlineWallets.Data   # Repository / database layer
  └── Betsson.OnlineWallets.Web    # API layer
 
 tests/
- ├── Betsson.OnlineWallets.UnitTests   # Unit tests (service logic)
+ ├── Betsson.OnlineWallets.UnitTests   # Unit tests for service logic
  └── Betsson.OnlineWallets.ApiTests    # End-to-end API tests
 ```
 
-### 📌 Commit Strategy (Conventional Commits)
+---
 
-Commits follow a clean, progressive structure such as:
+## 🐳 Running the Application (Docker)
+
+### Build image
+```bash
+docker build -f src/Betsson.OnlineWallets.Web/Dockerfile .
+```
+
+### Run container
+```bash
+docker run -p 8080:8080 <image-id>
+```
+
+### Swagger UI
+```
+http://localhost:8080/swagger/index.html
+```
+
+---
+
+## 🧪 Running All Tests
+
+```bash
+dotnet test
+```
+
+Expected output:
+
+```
+Passed! - Failed: 0, Passed: X, Total: X
+```
+
+---
+
+## 📌 Commit Strategy (Conventional Commits)
+
+The repository follows a clean, incremental commit structure:
 
 ```
 test: add unit tests for GetBalanceAsync
@@ -159,15 +155,19 @@ test(api): implement balance, deposit and withdraw API tests
 test(api): fix JSON deserialization and align tests with controller behavior
 ```
 
-This ensures a clear timeline and professional reviewability.
+This approach ensures professional reviewability and clarity of intent.
 
-### 🎯 Final Result
+---
+
+## 🎯 Final Outcome
 
 This solution demonstrates:
 
-- ✔️ Deep understanding of service behavior  
-- ✔️ Strong separation between unit tests and end-to-end tests  
-- ✔️ Proper handling of error scenarios and edge cases  
-- ✔️ Full reproducibility via Docker  
-- ✔️ Use of modern testing tools and practices  
-- ✔️ Clean commit history with automated validation  
+- Deep understanding of business logic behavior  
+- Strong separation between unit testing and API contract testing  
+- Proper handling of edge cases and error scenarios  
+- Fully reproducible environment using Docker  
+- Modern testing tools and best practices  
+- Clean, auditable commit history  
+
+---
