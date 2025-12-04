@@ -85,5 +85,61 @@ namespace Betsson.OnlineWallets.UnitTests.Services
                     )),
                 Times.Once);
         }
+
+        [Fact]
+        public async Task WithdrawFundsAsync_ShouldThrowInsufficientBalanceException_WhenAmountExceedsCurrentBalance()
+        {
+            var lastEntry = new OnlineWalletEntry
+            {
+                BalanceBefore = 0m,
+                Amount = 50m
+            };
+
+            _onlineWalletRepositoryMock
+                .Setup(r => r.GetLastOnlineWalletEntryAsync())
+                .ReturnsAsync(lastEntry);
+
+            var withdrawal = new Withdrawal { Amount = 80m };
+
+            var act = async () => await _service.WithdrawFundsAsync(withdrawal);
+
+            await act.Should().ThrowAsync<InsufficientBalanceException>();
+
+            _onlineWalletRepositoryMock.Verify(
+                r => r.InsertOnlineWalletEntryAsync(It.IsAny<OnlineWalletEntry>()),
+                Times.Never);
+        }
+
+        [Fact]
+        public async Task WithdrawFundsAsync_ShouldInsertNegativeEntryAndReturnNewBalance_WhenFundsAreSufficient()
+        {
+            var lastEntry = new OnlineWalletEntry
+            {
+                BalanceBefore = 0m,
+                Amount = 200m
+            };
+
+            _onlineWalletRepositoryMock
+                .Setup(r => r.GetLastOnlineWalletEntryAsync())
+                .ReturnsAsync(lastEntry);
+
+            _onlineWalletRepositoryMock
+                .Setup(r => r.InsertOnlineWalletEntryAsync(It.IsAny<OnlineWalletEntry>()))
+                .Returns(Task.CompletedTask);
+
+            var withdrawal = new Withdrawal { Amount = 80m };
+
+            var result = await _service.WithdrawFundsAsync(withdrawal);
+
+            result.Amount.Should().Be(120m);
+
+            _onlineWalletRepositoryMock.Verify(
+                r => r.InsertOnlineWalletEntryAsync(
+                    It.Is<OnlineWalletEntry>(e =>
+                        e.BalanceBefore == 200m &&
+                        e.Amount == -80m
+                    )),
+                Times.Once);
+        }
     }
 }
